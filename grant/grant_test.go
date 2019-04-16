@@ -12,10 +12,9 @@ import (
 	"github.com/brave-intl/bat-go/utils/altcurrency"
 	"github.com/brave-intl/bat-go/wallet"
 	"github.com/brave-intl/bat-go/wallet/provider/uphold"
-	"github.com/pressly/lg"
+	"github.com/rs/zerolog/log"
 	uuid "github.com/satori/go.uuid"
 	"github.com/shopspring/decimal"
-	"github.com/sirupsen/logrus"
 )
 
 func TestFromCompactJWS(t *testing.T) {
@@ -102,9 +101,10 @@ func TestVerifyAndConsume(t *testing.T) {
 
 	grantID := "18f7cada-2e9c-4c6e-a541-b2032c43a92e"
 
-	logger := logrus.New()
-	ctx := context.Background()
-	ctx = lg.WithLoggerContext(ctx, logger)
+	ctx := log.Logger.WithContext(context.Background())
+	// logger := logrus.New()
+	// ctx := context.Background()
+	// ctx = lg.WithLoggerContext(ctx, logger)
 
 	claimReq := ClaimGrantRequest{WalletInfo: walletInfo}
 	err = service.Claim(ctx, &claimReq, grantID)

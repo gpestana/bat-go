@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/pressly/lg"
+	"github.com/rs/zerolog/log"
 )
 
 // AppError is error type for json HTTP responses
@@ -52,9 +52,8 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			// Combine error with message
 			e.Message = fmt.Sprintf("%s: %v", e.Message, e.Error)
 		}
-
-		log := lg.Log(r.Context())
-		log.Errorf("%s", e.Message)
+		ctx := log.Logger.WithContext(r.Context())
+		log.Ctx(ctx).Info().Msg(e.Message)
 
 		e.ServeHTTP(w, r)
 	}

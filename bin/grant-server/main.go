@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -16,27 +15,24 @@ import (
 	raven "github.com/getsentry/raven-go"
 	"github.com/go-chi/chi"
 	chiware "github.com/go-chi/chi/middleware"
-	"github.com/pressly/lg"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/hlog"
+	"github.com/rs/zerolog/log"
 )
 
 var (
 	redisURL = os.Getenv("REDIS_URL")
 )
 
-func setupLogger(ctx context.Context) (context.Context, *logrus.Logger) {
-	logger := logrus.New()
-
-	//logger.Formatter = &logrus.JSONFormatter{}
-
-	// Redirect output from the standard logging package "log"
-	lg.RedirectStdlogOutput(logger)
-	lg.DefaultLogger = logger
-	ctx = lg.WithLoggerContext(ctx, logger)
-	return ctx, logger
+func setupLogger() *zerolog.Logger {
+	// set time field to unix
+	zerolog.TimeFieldFormat = ""
+	// always print out timestamp
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+	return &log.Logger
 }
 
-func setupRouter(ctx context.Context, logger *logrus.Logger) (context.Context, *chi.Mux) {
+func setupRouter(ctx context.Context, logger *zerolog.Logger) (context.Context, *chi.Mux) {
 	govalidator.SetFieldsRequiredByDefault(true)
 
 	r := chi.NewRouter()
@@ -52,6 +48,7 @@ func setupRouter(ctx context.Context, logger *logrus.Logger) (context.Context, *
 	r.Use(chiware.Heartbeat("/"))
 	r.Use(chiware.Timeout(60 * time.Second))
 	r.Use(middleware.BearerToken)
+	r.Use(hlog.NewHandler(*logger))
 	if logger != nil {
 		// Also handles panic recovery
 		r.Use(middleware.RequestLogger(logger))
@@ -70,7 +67,7 @@ func setupRouter(ctx context.Context, logger *logrus.Logger) (context.Context, *
 	service, err := grant.InitService(&grant.Redis{Pool: rp}, rp)
 	if err != nil {
 		raven.CaptureErrorAndWait(err, nil)
-		log.Panic(err)
+		log.Panic().Err(err)
 	}
 
 	r.Mount("/v1/grants", controllers.GrantsRouter(service))
@@ -79,16 +76,18 @@ func setupRouter(ctx context.Context, logger *logrus.Logger) (context.Context, *
 }
 
 func main() {
-	serverCtx, logger := setupLogger(context.Background())
+	serverCtx := context.Background()
+	logger := setupLogger()
+	contextLogger := log.Ctx(logger.WithContext(serverCtx))
+	subLog := contextLogger.Info().Str("prefix", "main")
+	subLog.Msg("Starting server")
 
-	logger.WithFields(logrus.Fields{"prefix": "main"}).Info("Starting server")
-
-	serverCtx, r := setupRouter(serverCtx, logger)
+	serverCtx, r := setupRouter(serverCtx, contextLogger)
 
 	srv := http.Server{Addr: ":3333", Handler: chi.ServerBaseContext(serverCtx, r)}
 	err := srv.ListenAndServe()
 	if err != nil {
 		raven.CaptureErrorAndWait(err, nil)
-		log.Panic(err)
+		contextLogger.Panic().Err(err)
 	}
 }

@@ -29,14 +29,16 @@ require (
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/pierrec/lz4 v2.0.5+incompatible // indirect
-	github.com/pressly/lg v1.1.1
 	github.com/prometheus/client_golang v0.9.2
+	github.com/rs/xid v1.2.1 // indirect
+	github.com/rs/zerolog v1.13.0
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24
 	github.com/sirupsen/logrus v1.4.1
 	github.com/superp00t/niceware v0.0.0-20170614015008-16cb30c384b5
 	github.com/tyler-smith/go-bip39 v0.0.0-20180716170310-95c66720ed7a
+	github.com/zenazn/goji v0.9.0 // indirect
 	golang.org/x/crypto v0.0.0-20190411191339-88737f569e3a
 	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
