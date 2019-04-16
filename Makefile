@@ -58,7 +58,7 @@ download-vault:
 	cd target/settlement-tools && unzip -o vault_$(VAULT_VERSION)_$(GOOS)_$(GOARCH).zip vault && rm vault_$(VAULT_VERSION)_*
 
 test:
-	go test -v --tags=$(TEST_TAGS) ./...
+	go test --tags=$(TEST_TAGS) ./...
 
 lint:
 	golangci-lint run -E gofmt -E golint --exclude-use-default=false
