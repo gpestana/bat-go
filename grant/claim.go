@@ -25,7 +25,7 @@ func (service *Service) Claim(ctx context.Context, req *ClaimGrantRequest, grant
 	err := service.datastore.ClaimGrantIDForWallet(grantID, req.WalletInfo)
 	if err != nil {
 		log.Ctx(loggerCtx).
-			Info().
+			Error().
 			Msg("Attempt to claim previously claimed grant!")
 		return err
 	}
