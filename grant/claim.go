@@ -20,11 +20,9 @@ type ClaimGrantRequest struct {
 // Claim registers a claim on behalf of a user wallet to a particular Grant.
 // Registered claims are enforced by RedeemGrantsRequest.Verify.
 func (service *Service) Claim(ctx context.Context, req *ClaimGrantRequest, grantID string) error {
-	loggerCtx := log.Logger.WithContext(ctx)
-
 	err := service.datastore.ClaimGrantIDForWallet(grantID, req.WalletInfo)
 	if err != nil {
-		log.Ctx(loggerCtx).
+		log.Ctx(ctx).
 			Error().
 			Msg("Attempt to claim previously claimed grant!")
 		return err

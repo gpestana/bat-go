@@ -52,7 +52,6 @@ func RedemptionDisabled() bool {
 //
 // Returns transaction info for grant fufillment
 func (service *Service) VerifyAndConsume(ctx context.Context, req *RedeemGrantsRequest) (*wallet.TransactionInfo, error) {
-	loggerCtx := log.Logger.WithContext(ctx)
 	// 1. Check grant signatures and decode
 	grants, err := DecodeGrants(grantPublicKey, req.Grants)
 	if err != nil {
@@ -144,7 +143,7 @@ func (service *Service) VerifyAndConsume(ctx context.Context, req *RedeemGrantsR
 		if err == nil {
 			// if claimed it was by this wallet
 			if req.WalletInfo.ProviderID != claimedID {
-				log.Ctx(loggerCtx).Error().Msg("Attempt to redeem previously claimed by another wallet!!!")
+				log.Ctx(ctx).Error().Msg("Attempt to redeem previously claimed by another wallet!!!")
 				return nil, errors.New("Grant claim does not match provided wallet")
 			}
 		}
@@ -216,7 +215,6 @@ func (service *Service) Redeem(ctx context.Context, req *RedeemGrantsRequest) (*
 	submitID := grantFulfillmentInfo.ID
 
 	userWallet, err := provider.GetWallet(req.WalletInfo)
-	loggerCtx := log.Logger.WithContext(ctx)
 	if err != nil {
 		conn := service.redisPool.Get()
 		defer closers.Panic(conn)
@@ -224,14 +222,14 @@ func (service *Service) Redeem(ctx context.Context, req *RedeemGrantsRequest) (*
 
 		incErr := b.Increment()
 		if incErr != nil {
-			log.Ctx(loggerCtx).
+			log.Ctx(ctx).
 				Error().
 				Msg("Could not increment the breaker!!!")
 			raven.CaptureMessage("Could not increment the breaker!!!", map[string]string{"breaker": "true"})
 			safeMode = true
 		}
 
-		log.Ctx(loggerCtx).
+		log.Ctx(ctx).
 			Error().
 			Msg(fmt.Sprintf("Could not get wallet %s from info after successful VerifyAndConsume", req.WalletInfo.ProviderID))
 		raven.CaptureMessage("Could not get wallet after successful VerifyAndConsume", map[string]string{"providerID": req.WalletInfo.ProviderID})
@@ -247,14 +245,14 @@ func (service *Service) Redeem(ctx context.Context, req *RedeemGrantsRequest) (*
 
 		incErr := b.Increment()
 		if incErr != nil {
-			log.Ctx(loggerCtx).
+			log.Ctx(ctx).
 				Error().
 				Msg("Could not increment the breaker!!!")
 			raven.CaptureMessage("Could not increment the breaker!!!", map[string]string{"breaker": "true"})
 			safeMode = true
 		}
 
-		log.Ctx(loggerCtx).
+		log.Ctx(ctx).
 			Error().
 			Msg(fmt.Sprintf("Could not fund wallet %s after successful VerifyAndConsume", req.WalletInfo.ProviderID))
 		raven.CaptureMessage("Could not fund wallet after successful VerifyAndConsume", map[string]string{"providerID": req.WalletInfo.ProviderID})
@@ -271,14 +269,14 @@ func (service *Service) Redeem(ctx context.Context, req *RedeemGrantsRequest) (*
 
 			incErr := b.Increment()
 			if incErr != nil {
-				log.Ctx(loggerCtx).
+				log.Ctx(ctx).
 					Error().
 					Msg("Could not increment the breaker!!!")
 				raven.CaptureMessage("Could not increment the breaker!!!", map[string]string{"breaker": "true"})
 				safeMode = true
 			}
 
-			log.Ctx(loggerCtx).
+			log.Ctx(ctx).
 				Error().
 				Msg(fmt.Sprintf("Could not submit settlement txn for wallet %s after successful VerifyAndConsume", req.WalletInfo.ProviderID))
 			raven.CaptureMessage("Could not submit settlement txn after successful VerifyAndConsume", map[string]string{"providerID": req.WalletInfo.ProviderID})

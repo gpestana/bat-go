@@ -29,7 +29,7 @@ func setupLogger(ctx context.Context) (context.Context, *zerolog.Logger) {
 	zerolog.TimeFieldFormat = ""
 	// always print out timestamp
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
-	return ctx, &log.Logger
+	return log.Logger.WithContext(ctx), &log.Logger
 }
 
 func setupRouter(ctx context.Context, logger *zerolog.Logger) (context.Context, *chi.Mux) {
@@ -76,17 +76,17 @@ func setupRouter(ctx context.Context, logger *zerolog.Logger) (context.Context, 
 }
 
 func main() {
-	serverCtx, logger := setupLogger(context.Background())
-	contextLogger := log.Ctx(logger.WithContext(serverCtx))
-	subLog := contextLogger.Info().Str("prefix", "main")
+	serverCtx, _ := setupLogger(context.Background())
+	logger := log.Ctx(serverCtx)
+	subLog := logger.Info().Str("prefix", "main")
 	subLog.Msg("Starting server")
 
-	serverCtx, r := setupRouter(serverCtx, contextLogger)
+	serverCtx, r := setupRouter(serverCtx, logger)
 
 	srv := http.Server{Addr: ":3333", Handler: chi.ServerBaseContext(serverCtx, r)}
 	err := srv.ListenAndServe()
 	if err != nil {
 		raven.CaptureErrorAndWait(err, nil)
-		contextLogger.Panic().Err(err)
+		logger.Panic().Err(err)
 	}
 }
