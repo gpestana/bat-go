@@ -26,7 +26,7 @@ var (
 
 func setupLogger(ctx context.Context) (context.Context, *zerolog.Logger) {
 	// set time field to unix
-	zerolog.TimeFieldFormat = ""
+	zerolog.TimeFieldFormat = time.UnixDate
 	// always print out timestamp
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 	return log.Logger.WithContext(ctx), &log.Logger
